@@ -1,0 +1,37 @@
+# Maven / Spring Boot build output
+ecom-application/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Spring Boot application secrets (keep local)
+ecom-application/src/main/resources/application-local.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Node / React
+ecom-frontend/node_modules/
+ecom-frontend/dist/
+ecom-frontend/dist-ssr/
+ecom-frontend/*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+*.tmp
+error.json
+errortxt.txt
