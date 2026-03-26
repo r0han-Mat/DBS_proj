@@ -11,8 +11,7 @@ export default function OrderSuccessPage() {
         <div className="container">
           <div className="success-page">
             <div className="success-card">
-              <div className="success-icon">⚠️</div>
-              <h1>No order data</h1>
+              <h1 className="text-2xl font-semibold text-white/90">No order data</h1>
               <Link to="/" className="btn btn-primary" style={{ marginTop: 24 }}>Back to Shop</Link>
             </div>
           </div>
@@ -27,8 +26,7 @@ export default function OrderSuccessPage() {
     <main className="page">
       <div className="container success-page">
         <div className="success-card">
-          <div className="success-icon">🎉</div>
-          <h1>Order Placed!</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Order Placed</h1>
           <p className="sub">Your order has been confirmed and is being processed.</p>
 
           <div className="order-details">

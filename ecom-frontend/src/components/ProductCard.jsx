@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { addToCart } from '../api/apiService';
+import { GlowCard } from './ui/spotlight-card';
 
 export default function ProductCard({ product, onToast }) {
   const { activeUserId, refreshCart } = useCart();
@@ -31,40 +32,69 @@ export default function ProductCard({ product, onToast }) {
     return url.startsWith('/') ? url : `/${url}`;
   };
 
+  const colors = ['blue', 'purple', 'green', 'orange', 'red'];
+  const glowColor = colors[(product.id || 0) % colors.length];
+
   return (
-    <div className="card product-card">
-      <div className="product-card-image">
+    <GlowCard customSize={true} glowColor={glowColor} className="flex flex-col h-full bg-[var(--bg-elevated)] border border-[var(--border)] group">
+      <div className="relative w-full aspect-square overflow-hidden bg-black/40 rounded-xl border border-white/5">
         {product.imageUrl ? (
-          <img src={getImageUrl(product.imageUrl)} alt={product.name} />
+          <img 
+            src={getImageUrl(product.imageUrl)} 
+            alt={product.name} 
+            className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110" 
+          />
         ) : (
-          <div className="product-card-placeholder">
-            <span>🛍️</span>
+          <div className="w-full h-full flex flex-col items-center justify-center text-sm font-medium tracking-widest uppercase text-white/30 bg-neutral-900 border-2 border-dashed border-white/5">
+            No Image
           </div>
         )}
-        <span className="product-category-chip">{product.category}</span>
-        {isOutOfStock && <span className="out-of-stock-overlay">Out of Stock</span>}
+        
+        <span className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-bold text-white/90 uppercase tracking-widest border border-white/10">
+            {product.category}
+        </span>
+        
+        {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
+                <span className="text-white font-black text-lg uppercase tracking-widest border-2 border-white/20 px-5 py-2 rounded-xl bg-black/40">Sold Out</span>
+            </div>
+        )}
       </div>
-      <div className="product-card-body">
-        <h3 className="product-name">{product.name}</h3>
-        <p className="product-description">{product.description}</p>
-        <div className="product-card-footer">
-          <span className="product-price">₹{Number(product.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={handleAddToCart}
-            disabled={loading || isOutOfStock}
-          >
-            {loading ? '...' : isOutOfStock ? 'Sold Out' : '+ Cart'}
-          </button>
+
+      <div className="flex flex-col flex-1 mt-2 justify-between gap-5">
+        <div>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 line-clamp-1">{product.name}</h3>
+            <p className="text-sm text-[var(--text-secondary)] line-clamp-2 leading-relaxed">{product.description}</p>
         </div>
-        <p className="product-stock">
-          {isOutOfStock ? (
-            <span style={{ color: 'var(--danger)' }}>Out of stock</span>
-          ) : (
-            <span style={{ color: 'var(--success)' }}>✓ {product.stockQuantity} in stock</span>
-          )}
-        </p>
+        
+        <div className="mt-auto flex flex-col gap-4">
+            <div className="flex items-end justify-between">
+                <span className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
+                    ₹{Number(product.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </span>
+                
+                <p className="text-xs font-medium tracking-wide">
+                  {isOutOfStock ? (
+                      <span className="text-neutral-500">Out of stock</span>
+                  ) : (
+                      <span className="text-neutral-400">{product.stockQuantity} remaining</span>
+                  )}
+                </p>
+            </div>
+            
+            <button
+              className={`w-full py-3 rounded-xl font-bold tracking-wide transition-all duration-300 ${
+                  isOutOfStock 
+                    ? 'bg-white/5 text-white/30 cursor-not-allowed border border-white/10' 
+                    : 'bg-white text-black hover:bg-neutral-200 active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)]'
+              }`}
+              onClick={handleAddToCart}
+              disabled={loading || isOutOfStock}
+            >
+              {loading ? 'Adding...' : isOutOfStock ? 'Sold Out' : '+ Add to Cart'}
+            </button>
+        </div>
       </div>
-    </div>
+    </GlowCard>
   );
 }

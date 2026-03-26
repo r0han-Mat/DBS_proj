@@ -126,7 +126,7 @@ export default function AdminPage() {
         <div className="admin-layout">
           {/* Add Product Form */}
           <div className="admin-form-card">
-            <h2>➕ Add Product</h2>
+            <h2 className="text-lg font-semibold mb-4 text-white/90">Add Product</h2>
             <form className="admin-form" onSubmit={handleCreate}>
               <Field label="Product Name" name="name" form={form} setForm={setForm} />
               <Field label="Description" name="description" form={form} setForm={setForm} />
@@ -135,7 +135,7 @@ export default function AdminPage() {
               <Field label="Category" name="category" form={form} setForm={setForm} />
               <Field label="Image URL" name="imageUrl" form={form} setForm={setForm} />
               <button className="btn btn-primary" type="submit" disabled={submitting}>
-                {submitting ? 'Creating…' : '+ Create Product'}
+                {submitting ? 'Creating...' : 'Create Product'}
               </button>
             </form>
           </div>
@@ -149,8 +149,7 @@ export default function AdminPage() {
               <p style={{ color: 'var(--text-secondary)' }}>Loading…</p>
             ) : products.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-icon">📦</div>
-                <h3>No products yet</h3>
+                <h3 className="text-xl font-medium text-white/80 mb-2">No products yet</h3>
               </div>
             ) : (
               <div className="table-wrapper">
@@ -195,8 +194,8 @@ export default function AdminPage() {
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: 8 }}>
-                              <button className="btn btn-secondary btn-sm" onClick={() => startEdit(p)}>✏️ Edit</button>
-                              <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}>🗑️</button>
+                              <button className="btn btn-secondary btn-sm" onClick={() => startEdit(p)}>Edit</button>
+                              <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)} title="Delete Product">Delete</button>
                             </div>
                           </td>
                         </tr>

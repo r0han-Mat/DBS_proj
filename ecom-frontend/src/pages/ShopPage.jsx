@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import ProductCard from '../components/ProductCard';
 import { getProducts, searchProducts } from '../api/apiService';
+import { HeroGeometric } from '../components/ui/shape-landing-hero';
+import GradientMenu from '../components/ui/gradient-menu';
 import '../App.css';
 
 function Toast({ msg, type }) {
@@ -41,17 +43,18 @@ export default function ShopPage() {
   const skeletons = Array.from({ length: 8 });
 
   return (
-    <main className="page">
-      <div className="container">
-        <div className="page-header">
-          <h1>Shop</h1>
-          <p>Find the best products at the best prices</p>
-        </div>
-
+    <main className="page" style={{ paddingTop: 0 }}>
+      <HeroGeometric 
+        badge="ECOM STORE" 
+        title1="Elevate Your" 
+        title2="Shopping Experience" 
+      />
+      
+      <div className="container" style={{ marginTop: '2rem' }}>
         <div className="search-bar">
           <input
             type="text"
-            placeholder="🔍  Search products by name…"
+            placeholder="Search products by name…"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
           />
@@ -63,7 +66,7 @@ export default function ShopPage() {
         </div>
 
         {loading ? (
-          <div className="product-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full mt-8">
             {skeletons.map((_, i) => (
               <div key={i} className="skeleton-card">
                 <div className="skeleton skeleton-img" />
@@ -77,14 +80,13 @@ export default function ShopPage() {
           </div>
         ) : products.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🔍</div>
-            <h3>No products found</h3>
-            <p>
+            <h3 className="text-xl font-medium text-white/80 mb-2">No products found</h3>
+            <p className="text-white/40">
               {keyword ? `No products matched "${keyword}"` : 'No products available yet. Add some from the Admin page.'}
             </p>
           </div>
         ) : (
-          <div className="product-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full mt-8">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} onToast={showToast} />
             ))}
@@ -92,6 +94,10 @@ export default function ShopPage() {
         )}
       </div>
       <Toast msg={toast.msg} type={toast.type} />
+      <div style={{ padding: '4rem 0', background: '#0d0f14' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#8b92a5' }}>Quick Links</h2>
+        <GradientMenu />
+      </div>
     </main>
   );
 }

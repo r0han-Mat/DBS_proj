@@ -54,8 +54,7 @@ export default function CartPage() {
       <main className="page">
         <div className="container">
           <div className="empty-state">
-            <div className="empty-icon">👤</div>
-            <h3>No user selected</h3>
+            <h3 className="text-xl font-medium text-white/80 mb-2">No user selected</h3>
             <p>Please go to the Users page and click "Shop as" to select a user before viewing your cart.</p>
             <Link to="/users" className="btn btn-primary" style={{ marginTop: 20 }}>Go to Users</Link>
           </div>
@@ -76,8 +75,7 @@ export default function CartPage() {
           <p style={{ color: 'var(--text-secondary)' }}>Loading cart…</p>
         ) : cartItems.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🛒</div>
-            <h3>Your cart is empty</h3>
+            <h3 className="text-xl font-medium text-white/80 mb-2">Your cart is empty</h3>
             <p>Add some products from the shop page.</p>
             <Link to="/" className="btn btn-primary" style={{ marginTop: 20 }}>Browse Products</Link>
           </div>
@@ -90,7 +88,7 @@ export default function CartPage() {
                   <div className="cart-item-image">
                     {item.product?.imageUrl
                       ? <img src={item.product.imageUrl} alt={item.product.name} />
-                      : '🛍️'}
+                      : <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase tracking-tighter">No Img</div>}
                   </div>
                   <div className="cart-item-info">
                     <div className="cart-item-name">{item.product?.name}</div>
@@ -132,7 +130,7 @@ export default function CartPage() {
                 onClick={handleCheckout}
                 disabled={checkingOut}
               >
-                {checkingOut ? '⏳ Processing…' : '✓ Place Order'}
+                {checkingOut ? 'Processing...' : 'Place Order'}
               </button>
             </div>
           </div>

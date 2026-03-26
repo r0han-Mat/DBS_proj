@@ -96,20 +96,20 @@ export default function UsersPage() {
         <div className="users-layout">
           {/* Create User Form */}
           <div className="user-form-card">
-            <h2>➕ Add User</h2>
+            <h2 className="text-lg font-semibold mb-4 text-white/90">Add User</h2>
             <form className="user-form" onSubmit={handleCreate}>
               <F label="First Name" name="firstName" form={form} setForm={setForm} />
               <F label="Last Name" name="lastName" form={form} setForm={setForm} />
               <F label="Email" name="email" type="email" form={form} setForm={setForm} />
               <F label="Phone" name="phone" form={form} setForm={setForm} />
-              <div className="address-section-label">📍 Address (optional)</div>
+              <div className="address-section-label text-xs uppercase tracking-widest text-white/30 font-bold mb-4 mt-6">Address (optional)</div>
               <F label="Street" name="street" form={form} setForm={setForm} />
               <F label="City" name="city" form={form} setForm={setForm} />
               <F label="State" name="state" form={form} setForm={setForm} />
               <F label="Zip Code" name="zipcode" form={form} setForm={setForm} />
               <F label="Country" name="country" form={form} setForm={setForm} />
               <button className="btn btn-primary" type="submit" disabled={submitting}>
-                {submitting ? 'Creating…' : '+ Create User'}
+                {submitting ? 'Creating...' : 'Create User'}
               </button>
             </form>
           </div>
@@ -123,9 +123,8 @@ export default function UsersPage() {
               <p style={{ color: 'var(--text-secondary)' }}>Loading…</p>
             ) : users.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-icon">👤</div>
-                <h3>No users yet</h3>
-                <p>Create a user to start shopping.</p>
+                <h3 className="text-xl font-medium text-white/80 mb-2">No users yet</h3>
+                <p className="text-white/40">Create a user to start shopping.</p>
               </div>
             ) : (
               <div className="table-wrapper user-card-table">
@@ -154,7 +153,7 @@ export default function UsersPage() {
                             </div>
                             {u.address?.city && (
                               <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                                📍 {u.address.city}, {u.address.country}
+                                {u.address.city}, {u.address.country}
                               </div>
                             )}
                           </td>
