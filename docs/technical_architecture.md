@@ -1,67 +1,94 @@
-# Technical Architecture Guide: Ecom-UI
+# Detailed Technical Architecture Guide: Ecom-UI
 
-This document explains the internal mechanics of the Ecom-UI platform, from the Java backend to the containerized database infrastructure.
-
----
-
-## 1. Backend Architecture (Spring Boot)
-The backend follows a standard **Layered Architecture** to separate concerns:
-
-1.  **Controller Layer**: Handles incoming HTTP requests (REST API).
-    *   Example: `ProductController` receives a `GET /api/products` request.
-2.  **Service Layer**: Contains business logic (e.g., validation, calculations).
-3.  **Repository Layer**: Interacts with the data source using **Spring Data JPA**.
-4.  **Model Layer**: Represents Database Tables as Java Objects (**@Entity**).
+This document provides a deep dive into the internal mechanics of the Ecom-UI platform, explaining how Java, Spring Boot, JPA, and Docker collaborate to provide a seamless e-commerce experience.
 
 ---
 
-## 2. ORM: JPA and Hibernate
-**Object-Relational Mapping (ORM)** is the bridge between Java and PostgreSQL.
+## 1. Request Flow (The Journey of a Click)
+When a user interacts with the UI, the data travels through several specialized layers.
 
-### 2.1 How Queries are Generated
-We don't write raw SQL for every task. Instead, **Hibernate** (the implementation of JPA) generates it automatically:
+```mermaid
+sequenceDiagram
+    participant U as User (Browser)
+    participant F as React (Frontend)
+    participant C as Controller (REST)
+    participant S as Service (Business Logic)
+    participant R as Repository (JPA/Hibernate)
+    participant D as PostgreSQL (Docker)
 
--   **Derived Queries**: If we define a method `findByCategory(String category)` in the repository, Hibernate parses the method name and generates:
-    ```sql
-    SELECT * FROM products WHERE category = ?;
-    ```
--   **Dirty Checking**: When you change a Java object's value (e.g., `product.setPrice(100)`), Hibernate tracks this "dirty" state and automatically issues an `UPDATE` SQL statement when the transaction completes.
--   **JPQL**: For complex tasks (like search), we use Java Persistence Query Language which looks like SQL but operates on Java Objects.
-
----
-
-## 3. API Connection (Frontend to Backend)
-The communication happens over **JSON** via HTTP:
-
-1.  **Frontend**: React uses **Axios** to send an asynchronous request to `http://localhost:8080/api/...`.
-2.  **CORS**: The backend is configured to allow requests specifically from the frontend's origin (`http://localhost:5173`).
-3.  **X-User-ID**: A custom header is used to identify the current user, simulating an authentication token for the shopping cart.
-
----
-
-## 4. Docker Infrastructure & Networking
-The database environment is fully containerized using **Docker Compose**.
-
-### 4.1 The "Postgres" Bridge Network
-When you run `docker-compose up`, Docker creates a virtual network.
--   **Postgres Container**: Named `postgres_container`. It listens on internal port `5432`.
--   **pgAdmin Container**: Named `pgadmin_container`. It also joins this network.
-
-### 4.2 DNS and Service Names
-Inside the Docker network, containers don't need IP addresses. They use **Service Names** as hostnames:
--   In pgAdmin, we connect to the database using the hostname `postgres` (the name defined in `docker-compose.yml`).
--   Docker's internal DNS server resolves `postgres` to the private IP of the database container.
-
-### 4.3 Port Mapping (The Bridge)
-To allow the **Java App (running on your host)** to talk to the **Postgres Container**:
--   We map `5433:5432`.
--   This means traffic to `localhost:5433` on your Windows computer is "bridged" into the container's port `5432`.
+    U->>F: Clicks "Add to Cart"
+    F->>C: POST /api/cart (JSON)
+    C->>S: Calls saveCartItem(dto)
+    S->>R: cartItemRepository.save(entity)
+    R->>D: SQL INSERT INTO cart_item...
+    D-->>R: Success/ID
+    R-->>S: Saved Entity
+    S-->>C: Success Response
+    C-->>F: HTTP 201 Created (JSON)
+    F-->>U: Update UI (Cart Count)
+```
 
 ---
 
-## 5. Summary of Data Flow
-1.  **User** clicks "Add to Cart" → **React** sends JSON to **Spring Boot**.
-2.  **Spring Boot** uses **JPA/Hibernate** to generate SQL.
-3.  **SQL** travels through **Port 5433** into the **Docker Network**.
-4.  **PostgreSQL** executes the SQL and updates the **Persistent Volume**.
-5.  **Triggers** (PL/pgSQL) automatically update stock and logs.
+## 2. Backend Architecture (Spring Boot Layers)
+
+### 2.1 The "Starter" Ecosystem
+The project uses **Spring Boot Starters**, which are pre-configured sets of dependencies:
+-   **`spring-boot-starter-web`**: Provides the embedded **Tomcat** server and APIs for RESTful services.
+-   **`spring-boot-starter-data-jpa`**: Brings in Hibernate and the JPA infrastructure.
+
+### 2.2 Entity Mapping (@Entity)
+The **Model** classes (e.g., `Product.java`) use JPA annotations to tell Hibernate how to map Java fields to Database columns:
+```java
+@Entity // Tells JPA this maps to a table
+@Table(name = "products")
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String name;
+    private Double price;
+}
+```
+
+---
+
+## 3. The Magic of Spring Data JPA
+The **Repository** layer is where most SQL generation happens implicitly.
+
+### 3.1 Proxy Implementation
+By extending `JpaRepository<Product, Long>`, Spring creates a **Proxy Object** at runtime. You don't need to write the implementation for `save()`, `findAll()`, or `findById()`; they are provided by default.
+
+### 3.2 Method Name Queries
+Hibernate can "infer" the SQL query from the method name in your Interface:
+-   `findByCategory(String cat)` → `WHERE category = ?`
+-   `findByNameContainingIgnoreCase(String name)` → `WHERE LOWER(name) LIKE LOWER(?)`
+-   `deleteByActiveFalse()` → `DELETE FROM ... WHERE active = false`
+
+---
+
+## 4. API & JSON Serialization (Jackson)
+Spring Boot automatically handles the conversion between Java Objects and JSON using a library called **Jackson**:
+-   **Inbound**: When the frontend sends a POST request with JSON, Jackson maps those keys to the fields of a Java **DTO** (Data Transfer Object).
+-   **Outbound**: When a controller returns a Java object, Jackson serializes it into a clean JSON format for the React frontend to consume.
+
+---
+
+## 5. Docker Networking Deep Dive
+
+### 5.1 The Bridge Driver
+Docker creates a virtual software bridge (switch) called `postgres` (from our compose file). 
+-   Each container gets a virtual Ethernet interface (`veth`) connected to this switch.
+-   **Isolations**: This network is isolated from your Windows host's main network, meaning external hackers can't see port 5432 unless we explicitly "bridge" it out (which we do via port 5433).
+
+### 5.2 Internal DNS (Service Discovery)
+Docker runs a lightweight DNS server. 
+-   When `pgadmin_container` tries to connect to the hostname `postgres`, it asks the Docker DNS server.
+-   The DNS server looks at the `docker-compose.yml`, identifies that the `postgres` service is at IP `172.18.0.2` (example), and returns it.
+-   **Why this matters**: This makes your infrastructure "portable." You can rename containers or change IP subnets, and as long as the service name remains `postgres`, the apps will still find the database.
+
+### 5.3 Volume Persistence
+Data is not stored *inside* the container image (which is read-only). It is stored in a **Named Volume** (`postgres:/var/lib/postgresql/data`).
+-   Even if the container is deleted (`docker rm`), the volume remains on your host's disk.
+-   When a new container starts, it "mounts" this volume and has all its data back immediately.
