@@ -83,13 +83,7 @@ This section is the core of the application. The database is a **normalized Post
 
 > 📄 [Download full ER Diagram PDF](docs/ER_scheme.pdf)
 
-**Page 1**
-
-![ER Diagram - Page 1](docs/er_diagram_1.png)
-
-**Page 2**
-
-![ER Diagram - Page 2](docs/er_diagram_2.png)
+![Updated ER Diagram](docs/er_diagram_v2.png)
 
 ---
 
@@ -187,6 +181,22 @@ A line-item within an order. Acts as a **junction table** between `orders` and `
 | `price`      | DECIMAL |               | Price per unit **at the time of purchase**     |
 
 > **Note on price snapshot:** The `price` field in `order_item` is stored independently from the current product price. This ensures that historical order records remain accurate even if a product's price changes later.
+---
+
+#### `audit_log`
+Tracks all administrative changes to the database for security and audit purposes.
+
+| Column       | Type      | Constraints | Description                                   |
+|--------------|-----------|-------------|-----------------------------------------------|
+| `id`         | SERIAL    | PK          | Primary key                                   |
+| `table_name` | VARCHAR   |             | Name of the table modified                    |
+| `action`     | VARCHAR   |             | Action type: `UPDATE`, `DELETE`               |
+| `record_id`  | BIGINT    |             | ID of the affected record                     |
+| `old_data`   | JSONB     |             | Data state before change                      |
+| `new_data`   | JSONB     |             | Data state after change                       |
+| `changed_at` | TIMESTAMP | DEFAULT NOW | Time of modification                          |
+
+> **Audit Logging:** Managed via a PostgreSQL trigger (`trg_product_audit`) which automatically captures JSON representations of records before and after updates.
 
 ---
 
@@ -212,8 +222,10 @@ A line-item within an order. Acts as a **junction table** between `orders` and `
 | **Cascade Delete**     | `user_table` → `addresses`, `orders` → `order_item` | `CascadeType.ALL` + `orphanRemoval = true`                            |
 | **Enum Columns**       | `orders.status`, `user_table.role`             | Stored as `VARCHAR` via `@Enumerated(EnumType.STRING)`                      |
 | **Price Snapshot**     | `order_item.price`, `cart_item.price`          | Price stored at insert time to prevent historical drift                      |
-| **JPQL Custom Query**  | `ProductRepository.searchProducts()`           | Case-insensitive `LIKE` search with active and stock filters                 |
-| **DDL Auto Update**    | `application.properties`                       | `spring.jpa.hibernate.ddl-auto=update` — schema auto-migrated on startup    |
+| **PL/pgSQL Triggers**  | Stock, Totals, Audit                           | Automated inventory and total calculation logic handled by DB                |
+| **Stored Procedures**  | `process_checkout`                             | Encapsulates complex multi-table checkout logic in an atomic transaction     |
+| **Materialized Views** | `mv_category_sales_stats`                      | Pre-computed sales reports for optimized performance                         |
+| **DDL Auto Update**    | `application.properties`                       | `spring.jpa.hibernate.ddl-auto=update` — basic schema auto-migrated         |
 
 ---
 
