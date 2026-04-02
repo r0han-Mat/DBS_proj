@@ -1,4 +1,4 @@
-services:
+cdservices:
   postgres:
     container_name: postgres_container
     image: postgres:14
